@@ -1,0 +1,208 @@
+CREATE DATABASE tipomixup
+    WITH 
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'Spanish_Mexico.1252'
+    LC_CTYPE = 'Spanish_Mexico.1252'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+    
+    
+    CREATE TABLE persona(
+    nompila character varying(20),
+    apepat character varying(20),
+    apemat character varying(20),
+    numidentificador integer NOT NULL,
+    genero character varying(1),
+    edad integer,
+    telefono integer,
+    direccion character varying(30),
+    correo character varying(30),
+    CONSTRAINT persona_pkey PRIMARY KEY (numidentificador)
+);
+
+
+CREATE TABLE cliente(
+    numcompras integer NOT NULL,
+    idcliente integer NOT NULL,
+    CONSTRAINT cliente_pkey PRIMARY KEY (idcliente),
+    CONSTRAINT fkidcliente FOREIGN KEY (idcliente)
+        REFERENCES persona(numidentificador)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE empleado(
+    salario integer NOT NULL,
+    diacontrato integer NOT NULL,
+    mescontrato integer NOT NULL,
+    aniocontrato integer NOT NULL,
+    idempleado integer NOT NULL,
+    CONSTRAINT empleado_pkey PRIMARY KEY (idempleado),
+    CONSTRAINT fkidempleado FOREIGN KEY (idempleado)
+        REFERENCES persona (numidentificador)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE evaluacionempleado(
+    numidcliente integer NOT NULL,
+    numidempleado integer NOT NULL,
+    evaluacionemp integer,
+    CONSTRAINT evaluacionempleado_pkey PRIMARY KEY (numidempleado, numidcliente),
+    CONSTRAINT fknumidcliente FOREIGN KEY (numidcliente)
+        REFERENCES public.cliente (idcliente)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fknumidempleado FOREIGN KEY (numidempleado)
+        REFERENCES empleado (idempleado)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE evaluacioncliente(
+    identificadorcliente integer NOT NULL,
+    identificadorempleado integer NOT NULL,
+    evaluacionacliente integer,
+    CONSTRAINT evaluacioncliente_pkey PRIMARY KEY (identificadorcliente, identificadorempleado),
+    CONSTRAINT fkidentificadorcliente FOREIGN KEY (identificadorcliente)
+        REFERENCES public.cliente (idcliente)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fkidentificadorempleado FOREIGN KEY (identificadorempleado)
+        REFERENCES empleado (idempleado)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE evaluacionempleadoempleado(
+    identificadorevaluador integer NOT NULL,
+    identificadorevaluado integer NOT NULL,
+    evaluacionfinal integer,
+    CONSTRAINT evaluacionempleadoempleado_pkey PRIMARY KEY (identificadorevaluador, identificadorevaluado),
+    CONSTRAINT fkidentificadorevaluado FOREIGN KEY (identificadorevaluado)
+        REFERENCES empleado (idempleado)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fkidentificadorevaluador FOREIGN KEY (identificadorevaluador)
+        REFERENCES empleado (idempleado)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE empleadocontratacliente(
+    contratadorempleado integer NOT NULL,
+    contratadocliente integer NOT NULL,
+    diacontrato integer,
+    mescontrato integer,
+    aniocontrato integer,
+    CONSTRAINT empleadocontratacliente_pkey PRIMARY KEY (contratadorempleado, contratadocliente),
+    CONSTRAINT fkcontratadocliente FOREIGN KEY (contratadocliente)
+        REFERENCES cliente (idcliente)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fkcontratadorempleado FOREIGN KEY (contratadorempleado)
+        REFERENCES empleado (idempleado)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE producto(
+    tipo character varying(10) COLLATE pg_catalog."default" NOT NULL,
+    numserie integer NOT NULL,
+    precio integer,
+    "tamaño" character varying(15),
+    formato character varying(10),
+    material character varying(15),
+    CONSTRAINT producto_pkey PRIMARY KEY (numserie)
+);
+
+
+CREATE TABLE series(
+    nombre character varying(20),
+    temporadas integer,
+    noserie integer NOT NULL,
+    CONSTRAINT series_pkey PRIMARY KEY (noserie),
+    CONSTRAINT fknoserie FOREIGN KEY (noserie)
+        REFERENCES producto (numserie)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE gadget(
+    numeroserie integer NOT NULL,
+    nombre character varying(20),
+    CONSTRAINT gadget_pkey PRIMARY KEY (numeroserie),
+    CONSTRAINT fknumeroserie FOREIGN KEY (numeroserie)
+        REFERENCES producto (numserie)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+CREATE TABLE pelicula(
+    reparto character varying(50),
+    nomdirector character varying(20),
+    numerodeserie integer NOT NULL,
+    nombre character varying(20),
+    CONSTRAINT pelicula_pkey PRIMARY KEY (numerodeserie),
+    CONSTRAINT fknumerodeserie FOREIGN KEY (numerodeserie)
+        REFERENCES producto (numserie)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE musica(
+    nombre character varying(20),
+    artista character varying(20),
+    duracion integer,
+    numdeserie integer NOT NULL,
+    CONSTRAINT musica_pkey PRIMARY KEY (numdeserie),
+    CONSTRAINT fknumdeserie FOREIGN KEY (numdeserie)
+        REFERENCES producto (numserie)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE empleadoproponeproducto(
+    tipoproducto character varying(10) NOT NULL,
+    serie integer NOT NULL,
+    numidentificadorempleado integer NOT NULL,
+    CONSTRAINT empleadoproponeproducto_pkey PRIMARY KEY (tipoproducto, serie, numidentificadorempleado),
+    CONSTRAINT fknumidentificadorempleado FOREIGN KEY (numidentificadorempleado)
+        REFERENCES empleado (idempleado) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fkserie FOREIGN KEY (serie)
+        REFERENCES producto (numserie)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE promocion(
+    numero integer NOT NULL,
+    premio character varying(15),
+    diaentrega integer,
+    mesentrega integer,
+    anioentrega integer,
+    empleadocreador integer NOT NULL,
+    seriepremio integer,
+    CONSTRAINT promocion_pkey PRIMARY KEY (numero, empleadocreador),
+    CONSTRAINT fkempleadocreador FOREIGN KEY (empleadocreador)
+        REFERENCES empleado (idempleado)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fkseriepremio FOREIGN KEY (seriepremio)
+        REFERENCES producto (numserie)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
